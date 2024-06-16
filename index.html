@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Classifier</title>
+    <style>
+      /* CSS styles */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .container {
+        max-width: 600px;
+        width: 100%;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+
+      h1 {
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      .upload-label {
+        display: inline-block;
+        margin-bottom: 20px;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      .upload-label:hover {
+        background-color: #0056b3;
+      }
+
+      .upload-label input[type="file"] {
+        display: none;
+      }
+
+      .image-container {
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      #uploadedImage {
+        max-width: 100%;
+        display: none; /* Initially hidden until image is uploaded */
+        border-radius: 8px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+      }
+
+      .output {
+        margin-top: 20px;
+        text-align: left;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .output div {
+        margin-bottom: 8px;
+      }
+
+      .output div:last-child {
+        margin-bottom: 0;
+      }
+
+      .output span {
+        font-weight: bold;
+        margin-right: 5px;
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Image Classifier</h1>
+      <label for="imageUpload" class="upload-label">
+        <input
+          type="file"
+          accept="image/*"
+          id="imageUpload"
+          onchange="previewImage(event)"
+        />
+        <span>Choose an image</span>
+      </label>
+      <div class="image-container">
+        <img id="uploadedImage" src="#" alt="Uploaded Image" />
+      </div>
+      <div id="output" class="output"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+    <script>
+      // JavaScript code goes here
+      async function loadModel() {
+        const model = await mobilenet.load();
+        return model;
+      }
+
+      async function classifyImage(model, imgElement) {
+        const predictions = await model.classify(imgElement);
+        return predictions;
+      }
+
+      function previewImage(event) {
+        const input = event.target;
+        const reader = new FileReader();
+        reader.onload = async function () {
+          const img = new Image();
+          img.onload = async function () {
+            document.getElementById("uploadedImage").src = this.src;
+            document.getElementById("uploadedImage").style.display = "block";
+            const model = await loadModel();
+            const predictions = await classifyImage(model, img);
+            displayPredictions(predictions);
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+
+      function displayPredictions(predictions) {
+        const outputElement = document.getElementById("output");
+        outputElement.innerHTML = "";
+        predictions.forEach((prediction) => {
+          outputElement.innerHTML += `<div>${
+            prediction.className
+          }: ${Math.round(prediction.probability * 100)}%</div>`;
+        });
+      }
+    </script>
+  </body>
+</html>
